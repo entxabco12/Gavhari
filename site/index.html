@@ -22,6 +22,28 @@ main{padding:24px}.page{display:none}.page.active{display:block}.homepage{paddin
 .footer{padding:25px;text-align:center;border-top:1px solid #24436d;color:var(--muted);font-size:12px;line-height:2}.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#f5c51f;color:#071a38;padding:12px 18px;border-radius:10px;z-index:100;transition:.2s;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:800px){.topbar{height:auto;min-height:66px;padding:10px;gap:10px;flex-wrap:wrap}.brand{font-size:14px}.logo{width:36px;height:40px}.nav{order:3;width:100%;overflow:auto;gap:18px;padding:8px 0}.searchbox{min-width:0;flex:1}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-list{grid-template-columns:repeat(2,minmax(0,1fr))}.carhero,.detail-layout,.product-layout{grid-template-columns:1fr}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.filters h3{grid-column:1/-1}.formgrid{grid-template-columns:1fr}main{padding:15px}.pagehead h1{font-size:20px}}
 @media(max-width:420px){.grid{gap:9px}.card{padding:10px}.category-list{grid-template-columns:1fr}.nav{font-size:11px}.pagehead{align-items:flex-start;flex-direction:column}}
+
+/* پیشنهادهای افقی جستجوی هدر */
+#headerSearch{position:relative}
+.gh-suggest-rail{
+  position:absolute;z-index:9999;top:calc(100% + 10px);right:0;
+  width:min(390px,calc(100vw - 28px));max-width:calc(100vw - 28px);
+  display:flex;gap:9px;overflow-x:auto;overscroll-behavior-x:contain;
+  padding:10px;background:#0b2346;border:1px solid #426087;
+  border-radius:13px;box-shadow:0 12px 30px #0006;
+  scrollbar-width:thin;direction:rtl
+}
+.gh-suggest-rail[hidden]{display:none}
+.gh-suggest-item{
+  flex:0 0 155px;min-width:155px;display:flex;align-items:center;
+  gap:9px;text-align:right;padding:10px;border:1px solid #345477;
+  border-radius:10px;background:#15345e;color:#fff;cursor:pointer
+}
+.gh-suggest-item b{display:block;font-size:12px;white-space:normal}
+.gh-suggest-item small{display:block;margin-top:5px;color:#d6c18a;font-size:10px}
+.gh-suggest-emoji{font-size:24px}
+.gh-suggest-empty{padding:10px;color:#fff;font-size:12px;white-space:nowrap}
+
 </style>
 <style id="gohari-home-rebuild">
 #home .gh-home{direction:rtl;background:#03132e;color:#f5f7ff;font-family:inherit;overflow:hidden}
@@ -109,33 +131,10 @@ main{padding:24px}.page{display:none}.page.active{display:block}.homepage{paddin
       </div>
     </div>
 
-    <section class="gh-parts">
-      <div class="gh-section-heading">
-        <span>دنیای قطعات خودرو</span>
-        <h2>هر قطعه‌ای که نیاز داری، پیدا کن</h2>
-      </div>
-      <div class="gh-parts-art gh-art" data-crop="0,410,1024,380">
-        <img alt="نمای فنی و اجزای خودرو" class="gh-crop-image">
-        <div class="gh-part-links">
-          <button data-page="categories">بدنه</button>
-          <button data-page="categories">موتور</button>
-          <button data-page="categories">سیستم برق</button>
-          <button data-page="categories">گیربکس</button>
-          <button data-page="categories">سیستم تعلیق</button>
-          <button data-page="categories">چرخ‌ها</button>
-          <button data-page="categories">سیستم ترمز</button>
-        </div>
-      </div>
-    </section>
+
 
     <section class="gh-cars" id="gh-car-selection">
-      <div class="gh-car-search">
-        <form id="gh-car-search-form">
-          <input id="gh-car-search-input" type="search" placeholder="جستجوی خودرو یا قطعه...">
-          <button type="submit">جستجو</button>
-        </form>
-        <h2>🚘 انتخاب خودرو</h2>
-      </div>
+      <div class="gh-car-search"><h2>🚘 انتخاب خودرو</h2></div>
       <div class="gh-car-groups">
         <div class="gh-car-group">
           <h3>سایپا <span class="gh-saipa-mark">✦</span></h3>
@@ -256,7 +255,62 @@ document.getElementById('checkoutForm').addEventListener('submit',e=>{e.preventD
 document.getElementById('accountForm').addEventListener('submit',e=>{e.preventDefault();toast('این قابلیت در نسخه نمایشی فعال نیست')});
 function renderBrands(){document.getElementById('brandGrid').innerHTML=brands.map((b,i)=>`<div class="card" style="text-align:center"><div class="thumb" style="font-size:34px">✦</div><h3>${b}</h3><p>مشاهده قطعات این برند</p><button class="btn secondary" data-brand="${b}">نمایش محصولات</button></div>`).join('')}
 document.addEventListener('click',e=>{let b=e.target.closest('[data-brand]');if(b){selectedCat='';document.getElementById('filterBrand').value=b.dataset.brand;go('products');renderProducts()}});
-function doSearch(q){let found=products.filter(p=>(p.name+' '+p.cat+' '+p.brand).includes(q));document.getElementById('searchResults').innerHTML=found.length?found.map(productCard).join(''):'<div class="empty">نتیجه‌ای پیدا نشد.</div>';go('search')}
+function normalizeSearch(v){return String(v||'').toLowerCase().replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/\s+/g,' ').trim()}
+function doSearch(q){
+  const query=normalizeSearch(q);
+  let found=products.filter(p=>normalizeSearch(p.name+' '+p.cat+' '+p.brand+' '+p.id).includes(query));
+  document.getElementById('searchInput').value=q;
+  document.getElementById('searchResults').innerHTML=found.length?found.map(productCard).join(''):'<div class="empty">نتیجه‌ای پیدا نشد.</div>';
+  go('search');
+}
+(function initHeaderSuggestions(){
+  const input=document.getElementById('globalSearch');
+  const form=document.getElementById('headerSearch');
+  if(!input||!form)return;
+
+  const rail=document.createElement('div');
+  rail.className='gh-suggest-rail';
+  rail.id='ghSuggestRail';
+  rail.hidden=true;
+  form.appendChild(rail);
+
+  function hide(){rail.hidden=true;rail.innerHTML=''}
+  input.addEventListener('input',function(){
+    const q=normalizeSearch(input.value);
+    if(q.length<2){hide();return}
+    const found=products.filter(p=>
+      normalizeSearch(p.name+' '+p.cat+' '+p.brand+' '+p.id).includes(q)
+    ).slice(0,8);
+
+    if(!found.length){
+      rail.innerHTML='<div class="gh-suggest-empty">موردی پیدا نشد</div>';
+      rail.hidden=false;
+      return;
+    }
+
+    rail.innerHTML=found.map(p=>
+      '<button type="button" class="gh-suggest-item" data-gh-suggest-id="'+p.id+'">'+
+      '<span class="gh-suggest-emoji">'+p.emoji+'</span>'+
+      '<span><b>'+p.name+'</b><small>'+p.brand+' · '+fa(p.price)+' تومان</small></span>'+
+      '</button>'
+    ).join('');
+    rail.hidden=false;
+  });
+
+  rail.addEventListener('click',function(e){
+    const item=e.target.closest('[data-gh-suggest-id]');
+    if(!item)return;
+    const p=products.find(x=>x.id===Number(item.dataset.ghSuggestId));
+    if(!p)return;
+    input.value=p.name;
+    hide();
+    doSearch(p.name);
+  });
+
+  document.addEventListener('click',function(e){
+    if(!form.contains(e.target))hide();
+  });
+})();
 document.getElementById('headerSearch').addEventListener('submit',e=>{e.preventDefault();let q=document.getElementById('globalSearch').value.trim();if(q)doSearch(q);else go('search')});
 document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();let q=document.getElementById('searchInput').value.trim();let found=products.filter(p=>(p.name+' '+p.cat+' '+p.brand).includes(q));document.getElementById('searchResults').innerHTML=found.length?found.map(productCard).join(''):'<div class="empty">نتیجه‌ای پیدا نشد.</div>'});
 const stage=document.getElementById('carStage'),carImg=document.getElementById('carImage');let down=false,lastX=0,angle=0;stage.addEventListener('pointerdown',e=>{down=true;lastX=e.clientX;stage.setPointerCapture(e.pointerId)});stage.addEventListener('pointermove',e=>{if(!down)return;angle+=(e.clientX-lastX)*.6;lastX=e.clientX;carImg.style.transform=`perspective(700px) rotateY(${angle}deg) scaleX(${Math.max(.86,1-Math.abs(Math.sin(angle*Math.PI/180))*.12)})`});stage.addEventListener('pointerup',()=>down=false);stage.addEventListener('pointercancel',()=>down=false);
