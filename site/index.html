@@ -394,6 +394,12 @@ button.chip:hover{border-color:#f5c51f;color:#f5c51f}
 #home .gh-address{text-decoration:none;color:#e9efff}
 @media(max-width:800px){.gh-stats{grid-template-columns:repeat(2,1fr)}.gh-qsearch button{padding:0 18px}.sect{font-size:17px}}
 @media(max-width:420px){.pc-vis{height:92px;font-size:40px}.pc h3{font-size:12px;margin:10px 10px 6px;min-height:44px}.pc-meta{margin:0 10px;font-size:11px}.pc-foot{padding:10px}.pc-actions{grid-template-columns:1fr}}
+
+.pc-vis svg{width:76px;height:76px;position:relative}
+.pc-vis img{position:relative;max-width:90%;max-height:100%;object-fit:contain}
+.pc-note{position:absolute;bottom:6px;left:8px;font-style:normal;font-size:9px;color:#8ea3c4}
+.detail-visual{position:relative}.detail-visual svg{width:190px;height:190px}.detail-visual img{max-width:92%;max-height:280px;object-fit:contain}
+@media(max-width:420px){.pc-vis svg{width:58px;height:58px}}
 </style><script id="gh-v3-js">(function(){
 'use strict';
 var D=document;
@@ -422,11 +428,48 @@ function carBrand(car){return cars.indexOf(car)<5?'ایران‌خودرو':'س�
 function brandOfCar(car){return ['پراید','تیبا','ساینا','کوییک','شاهین'].indexOf(car)>-1?'سایپا':'ایران‌خودرو'}
 
 /* ---------- cards ---------- */
+var SH={
+coil:'<rect x="30" y="16" width="40" height="52" rx="7"/><path d="M37 28h26M37 37h26M37 46h26M37 55h26"/><rect x="40" y="68" width="20" height="16" rx="3"/><circle cx="50" cy="9" r="4"/>',
+belt:'<circle cx="30" cy="52" r="19"/><circle cx="72" cy="52" r="11"/><path d="M30 33L72 41M30 71L72 63" stroke-dasharray="3 3"/><circle cx="30" cy="52" r="5"/><circle cx="72" cy="52" r="4"/>',
+bearing:'<circle cx="50" cy="50" r="36"/><circle cx="50" cy="50" r="25"/><circle cx="50" cy="50" r="13"/><circle cx="50" cy="29" r="3"/><circle cx="50" cy="71" r="3"/><circle cx="29" cy="50" r="3"/><circle cx="71" cy="50" r="3"/>',
+roller:'<circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="24"/><circle cx="50" cy="50" r="9"/><path d="M50 26v-8M50 74v8M26 50h-8M74 50h8"/>',
+thermo:'<rect x="30" y="12" width="40" height="14" rx="3"/><path d="M40 26l20 8-20 8 20 8-20 8 20 8"/><rect x="36" y="74" width="28" height="12" rx="3"/>',
+seal:'<circle cx="50" cy="50" r="34" stroke-width="9"/><circle cx="50" cy="50" r="14"/><circle cx="50" cy="50" r="22" stroke-dasharray="2 4"/>',
+pad:'<path d="M12 66Q50 18 88 66L82 80H18Z"/><path d="M26 66Q50 40 74 66"/><path d="M40 72h20"/>',
+shock:'<rect x="44" y="6" width="12" height="20" rx="3"/><rect x="36" y="26" width="28" height="48" rx="5"/><path d="M30 36h40M30 46h40M30 56h40" stroke-dasharray="1 0"/><circle cx="50" cy="86" r="6"/>',
+ring:'<ellipse cx="50" cy="32" rx="30" ry="12"/><ellipse cx="50" cy="52" rx="30" ry="12"/><ellipse cx="50" cy="72" rx="30" ry="12"/>',
+rad:'<rect x="10" y="30" width="80" height="42" rx="4"/><path d="M26 30v42M38 30v42M50 30v42M62 30v42M74 30v42"/><rect x="4" y="38" width="8" height="26" rx="2"/><rect x="88" y="38" width="8" height="26" rx="2"/><path d="M20 30v-10h12v10"/>',
+cond:'<rect x="12" y="24" width="76" height="52" rx="5"/><path d="M22 36h56M78 36v14H22v14h56"/>',
+bush:'<rect x="16" y="28" width="68" height="44" rx="12"/><circle cx="50" cy="50" r="15"/><circle cx="50" cy="50" r="6"/>',
+relay:'<rect x="22" y="24" width="56" height="44" rx="6"/><path d="M34 68v16M50 68v16M66 68v16"/><path d="M33 38h34M33 50h20"/>',
+gear:'<circle cx="50" cy="50" r="24"/><circle cx="50" cy="50" r="9"/><path d="M50 14v12M50 74v12M14 50h12M74 50h12M24 24l8 8M68 68l8 8M76 24l-8 8M32 68l-8 8"/>'
+};
+function partKind(p){var n=p.name,c=p.cat;
+  if(c==='رینگ موتور')return 'ring';
+  if(c==='لنت ترمز')return 'pad';
+  if(c==='کمک\u200cفنر')return 'shock';
+  if(c==='رادیاتور آب')return 'rad';
+  if(c==='کندانسور و بخاری')return 'cond';
+  if(/کویل/.test(n))return 'coil';
+  if(/مدول|رله/.test(n))return 'relay';
+  if(/ترموستات/.test(n))return 'thermo';
+  if(/تسمه|کیت تایم/.test(n))return 'belt';
+  if(/غلطک/.test(n))return 'roller';
+  if(/بلبرینگ|رولبرینگ/.test(n))return 'bearing';
+  if(/کاسه|اورینگ|واشر|آب\u200cبندی/.test(n))return 'seal';
+  if(c==='جلوبندی و دسته\u200cموتور')return 'bush';
+  return 'gear';
+}
+function partSVG(p){
+  if(p.image)return '<img src="'+esc(p.image)+'" alt="'+esc(p.name)+'" loading="lazy">';
+  return '<svg viewBox="0 0 100 100" fill="rgba(245,197,31,.10)" stroke="#dbe7ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SH[partKind(p)]+'</svg><em class="pc-note">تصویر نمونه</em>';
+}
+
 function productCard(p){
   var col=CATCOL[p.cat]||'#f5c51f';
   var lab=AXIS[p.vehicle]?'محور':'خودرو';
   return '<article class="card product pc" style="--cc:'+col+'">'+
-    '<div class="pc-vis"><span>'+catEm(p.cat)+'</span><i class="pc-tag">'+esc(p.cat)+'</i></div>'+
+    '<div class="pc-vis">'+partSVG(p)+'<i class="pc-tag">'+esc(p.cat)+'</i></div>'+
     '<h3>'+esc(p.name)+'</h3>'+
     '<ul class="pc-meta"><li><b>کد فنی</b><span>'+esc(p.partCode||'—')+'</span></li>'+
     '<li><b>'+lab+'</b><span>'+esc(p.vehicle||'—')+'</span></li>'+
@@ -517,7 +560,7 @@ function renderCar(){
 /* ---------- detail ---------- */
 function renderDetail(){
   var p=selectedProduct;if(!p)return;
-  var v=$('#detail .detail-visual');if(v)v.textContent=catEm(p.cat);
+  var v=$('#detail .detail-visual');if(v)v.innerHTML=partSVG(p);
   var rel=$('#ghRelated');
   if(rel){
     var r=products.filter(function(x){return x.cat===p.cat&&x.id!==p.id}).slice(0,4);
