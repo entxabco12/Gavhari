@@ -1,0 +1,6 @@
+?? .github/workflows/deploy.yml.backup
+?? backup/
+?? isaco_gohari_reference_prototype.html
+?? isaco_gohari_store.html
+?? p001-gohari-homepage.js
+?? site/index.html.backup-2026-11-24T03-50-15-960Z
